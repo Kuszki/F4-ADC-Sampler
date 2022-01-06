@@ -10,12 +10,13 @@
  ******************************************************************************
  * @attention
  *
- * Copyright (c) 2021 STMicroelectronics.
- * All rights reserved.
+ * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+ * All rights reserved.</center></h2>
  *
- * This software is licensed under terms that can be found in the LICENSE file
- * in the root directory of this software component.
- * If no LICENSE file comes with this software, it is provided AS-IS.
+ * This software component is licensed by ST under BSD 3-Clause license,
+ * the "License"; You may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at:
+ *                        opensource.org/licenses/BSD-3-Clause
  *
  ******************************************************************************
  */
@@ -35,10 +36,10 @@ static uint8_t *__sbrk_heap_end = NULL;
  *
  * @verbatim
  * ############################################################################
- * #  .data  #  .bss  #       newlib heap       #          MSP stack          #
- * #         #        #                         # Reserved by _Min_Stack_Size #
+ * #  .data  #  .bss  #                        heap                           #
+ * #         #        #                                                       #
  * ############################################################################
- * ^-- RAM start      ^-- _end                             _estack, RAM end --^
+ * ^-- RAM start      ^-- _end                              _eheap, RAM end --^
  * @endverbatim
  *
  * This implementation starts allocating at the '_end' linker symbol
@@ -53,13 +54,11 @@ static uint8_t *__sbrk_heap_end = NULL;
 void *_sbrk(ptrdiff_t incr)
 {
   extern uint8_t _end; /* Symbol defined in the linker script */
-  extern uint8_t _estack; /* Symbol defined in the linker script */
-  extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
-  const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
-  const uint8_t *max_heap = (uint8_t *)stack_limit;
+  extern uint8_t _eheap; /* Symbol defined in the linker script */
+  const uint8_t *max_heap = (uint8_t*)&_eheap;
   uint8_t *prev_heap_end;
 
-  /* Initialize heap end at first call */
+  /* Initalize heap end at first call */
   if (NULL == __sbrk_heap_end)
   {
     __sbrk_heap_end = &_end;
