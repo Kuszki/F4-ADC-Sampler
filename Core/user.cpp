@@ -10,6 +10,8 @@
 #include "adc.h"
 #include "dma.h"
 
+#include "matrix.hpp"
+
 #define ARM_MATH_CM4
 #include "arm_math.h"
 
@@ -30,27 +32,14 @@ extern DMA_HandleTypeDef hdma_adc1;
 volatile int doReq = 0;
 volatile int isDone = 0;
 
+#define adc_samples 16384U
+uint32_t* adc_value;
+
 uint8_t dummy = 0;
 
-//const float32_t A[] =
-//{
-//	1, 2, 3, 4,
-//	5, 6, 7, 8,
-//	9, 1, 2, 3,
-//	4, 5, 6, 7
-//};
-//
-//const float32_t B[] =
-//{
-//	1, 2, 3, 4
-//};
-//
-//float32_t W[4];
-
-volatile arm_status status;
-
-size_t adc_samples = 1024;
-uint32_t* adc_value;
+const float32_t* A = get_matrix_ptr();
+//float32_t X[adc_samples];
+//float32_t Y[adc_samples];
 
 int main(void)
 {
@@ -76,14 +65,13 @@ int main(void)
 	HAL_UART_Receive_IT(&huart2, &dummy, 1);
 
 //	arm_matrix_instance_f32 mat_A;
-//	arm_mat_init_f32(&mat_A, 4, 4, (float32_t*) A);
+//	arm_mat_init_f32(&mat_A, adc_samples, adc_samples, (float32_t*) A);
 //
-//	arm_matrix_instance_f32 mat_B;
-//	arm_mat_init_f32(&mat_B, 4, 1, (float32_t*) B);
+//	arm_matrix_instance_f32 mat_X;
+//	arm_mat_init_f32(&mat_X, adc_samples, 1, X);
 //
-//	arm_matrix_instance_f32 mat_W;
-//	arm_mat_init_f32(&mat_W, 4, 1, (float32_t*) W);
-//	status = arm_mat_mult_f32(&mat_A, &mat_B, &mat_W);
+//	arm_matrix_instance_f32 mat_Y;
+//	arm_mat_init_f32(&mat_Y, adc_samples, 1, Y);
 
 	HAL_ADC_Start_DMA(&hadc1, adc_value, adc_samples);
 
@@ -95,6 +83,9 @@ int main(void)
 		HAL_TIM_Base_Start_IT(&htim2);
 
 		while (!isDone);
+
+//		arm_q31_to_float((q31_t*) adc_value, X, adc_samples);
+//		arm_mat_mult_f32(&mat_A, &mat_X, &mat_Y);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) adc_value,
 				adc_samples*sizeof(uint32_t), 10000);
