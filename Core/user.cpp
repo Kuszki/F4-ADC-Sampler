@@ -74,6 +74,8 @@ int main(void)
 //	arm_mat_init_f32(&mat_Y, adc_samples, 1, Y);
 
 	HAL_ADC_Start_DMA(&hadc1, adc_value, adc_samples);
+	HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
+	HAL_GPIO_WritePin(GPIOD, LD6_Pin, GPIO_PIN_RESET);
 
 	while (1) if (doReq)
 	{
@@ -81,6 +83,7 @@ int main(void)
 		doReq = 0;
 
 		HAL_TIM_Base_Start_IT(&htim2);
+		HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_SET);
 
 		while (!isDone);
 
@@ -97,7 +100,7 @@ int main(void)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-	HAL_GPIO_TogglePin(GPIOD, LD5_Pin);
+	HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
 	HAL_TIM_Base_Stop_IT(&htim2);
 
 	isDone = 1;
@@ -105,7 +108,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-	HAL_GPIO_TogglePin(GPIOD, LD6_Pin); // funguje
+	HAL_GPIO_TogglePin(GPIOD, LD6_Pin);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
