@@ -32,7 +32,7 @@ extern DMA_HandleTypeDef hdma_adc1;
 volatile int doReq = 0;
 volatile int isDone = 0;
 
-#define adc_samples 16384U
+#define adc_samples 10240
 uint32_t* adc_value;
 
 uint8_t dummy = 0;
