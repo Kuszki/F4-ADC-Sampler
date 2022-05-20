@@ -32,20 +32,17 @@ extern DMA_HandleTypeDef hdma_adc1;
 volatile int doReq = 0;
 volatile int isDone = 0;
 
-#define adc_samples 10240
+#define adc_samples 128
 uint32_t* adc_value;
 
 uint8_t dummy = 0;
 
 const float32_t* A = get_matrix_ptr();
-//float32_t X[adc_samples];
-//float32_t Y[adc_samples];
+float32_t X[adc_samples];
+float32_t Y[adc_samples];
 
 int main(void)
 {
-	/* FPU initialization */
-	SCB->CPACR |= ((3 << 10*2) | (3 << 11*2));
-
 	adc_value = new uint32_t[adc_samples];
 
 	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -64,14 +61,14 @@ int main(void)
 
 	HAL_UART_Receive_IT(&huart2, &dummy, 1);
 
-//	arm_matrix_instance_f32 mat_A;
-//	arm_mat_init_f32(&mat_A, adc_samples, adc_samples, (float32_t*) A);
-//
-//	arm_matrix_instance_f32 mat_X;
-//	arm_mat_init_f32(&mat_X, adc_samples, 1, X);
-//
-//	arm_matrix_instance_f32 mat_Y;
-//	arm_mat_init_f32(&mat_Y, adc_samples, 1, Y);
+	arm_matrix_instance_f32 mat_A;
+	arm_mat_init_f32(&mat_A, adc_samples, adc_samples, (float32_t*) A);
+
+	arm_matrix_instance_f32 mat_X;
+	arm_mat_init_f32(&mat_X, adc_samples, 1, X);
+
+	arm_matrix_instance_f32 mat_Y;
+	arm_mat_init_f32(&mat_Y, adc_samples, 1, Y);
 
 	HAL_ADC_Start_DMA(&hadc1, adc_value, adc_samples);
 	HAL_GPIO_WritePin(GPIOD, LD5_Pin, GPIO_PIN_RESET);
@@ -87,8 +84,13 @@ int main(void)
 
 		while (!isDone);
 
-//		arm_q31_to_float((q31_t*) adc_value, X, adc_samples);
-//		arm_mat_mult_f32(&mat_A, &mat_X, &mat_Y);
+		HAL_GPIO_WritePin(DEBUG_OUT_GPIO_Port, DEBUG_OUT_Pin, GPIO_PIN_SET);
+
+		arm_q31_to_float((q31_t*) adc_value, X, adc_samples);
+		arm_mat_scale_f32(&mat_X, 2147483648.0f, &mat_X);
+		arm_mat_mult_f32(&mat_A, &mat_X, &mat_Y);
+
+		HAL_GPIO_WritePin(DEBUG_OUT_GPIO_Port, DEBUG_OUT_Pin, GPIO_PIN_RESET);
 
 		HAL_UART_Transmit(&huart2, (uint8_t*) adc_value,
 				adc_samples*sizeof(uint32_t), 10000);
